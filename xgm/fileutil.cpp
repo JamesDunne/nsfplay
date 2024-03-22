@@ -1,5 +1,6 @@
 #include "fileutil.h"
 
+#ifdef _WIN32
 #include <windows.h>
 
 FILE* fopen_utf8(const char* filename, const char* mode)
@@ -13,3 +14,9 @@ FILE* fopen_utf8(const char* filename, const char* mode)
 	utf8_file(mode,wmode,MAX_WMODE);
 	return _wfopen(wfilename,wmode);
 }
+#else
+FILE* fopen_utf8(const char* filename, const char* mode)
+{
+    return fopen(filename, mode);
+}
+#endif

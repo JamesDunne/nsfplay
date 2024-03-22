@@ -29,7 +29,7 @@ namespace xgm
     dmc->SetCPU(&cpu); // IRQ requires CPU access
     mmc5->SetCPU(&cpu); // MMC5 PCM read action requires CPU read access
 
-    /* ƒAƒ“ƒv©ƒtƒBƒ‹ƒ^©ƒŒ[ƒgƒRƒ“ƒo[ƒ^©‰¹Œ¹ ‚ğÚ‘± */
+    /* ï¿½Aï¿½ï¿½ï¿½vï¿½ï¿½ï¿½tï¿½Bï¿½ï¿½ï¿½^ï¿½ï¿½ï¿½ï¿½ï¿½[ï¿½gï¿½Rï¿½ï¿½ï¿½oï¿½[ï¿½^ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ú‘ï¿½ */
     for (int i = 0; i < NES_DEVICE_MAX; i++)
     {
       amp[i].Attach (sc[i]);
@@ -372,7 +372,7 @@ void NSFPlayer::SetPlayFreq (double r)
     silent_length = 0;
     playtime_detected = false;
     total_render = 0;
-    frame_render = (int)(rate)/60; // ‰‰‘tî•ñ‚ğXV‚·‚éüŠú
+    frame_render = (int)(rate)/60; // ï¿½ï¿½ï¿½tï¿½ï¿½ï¿½ï¿½ï¿½Xï¿½Vï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     apu_clock_rest = 0.0;
     cpu_clock_rest = 0.0;
 
@@ -394,15 +394,15 @@ void NSFPlayer::SetPlayFreq (double r)
     if (logcpu->GetLogLevel() > 0)
         logcpu->Begin(GetTitleString());
 
-    // ‰‰‘tŒã‚ÉRAM‹óŠÔ‚ğ”j‰ó‚³‚ê‚éê‡‚ª‚ ‚é‚Ì‚ÅCÄƒ[ƒh
+    // ï¿½ï¿½ï¿½tï¿½ï¿½ï¿½RAMï¿½ï¿½Ô‚ï¿½jï¿½ó‚³‚ï¿½ï¿½ê‡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì‚ÅCï¿½Äƒï¿½ï¿½[ï¿½h
     Reload ();
-    // ƒŒ[ƒg‚Ìİ’è‚ÍReset‚æ‚è‘O‚És‚Á‚Ä‚¨‚­‚±‚Æ
+    // ï¿½ï¿½ï¿½[ï¿½gï¿½Ìİ’ï¿½ï¿½Resetï¿½ï¿½ï¿½Oï¿½Ésï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     SetPlayFreq (rate);
-    // ‘S‚Ä‚ÌƒRƒ“ƒtƒBƒOƒŒ[ƒVƒ‡ƒ“‚ğ“K—p
+    // ï¿½Sï¿½Ä‚ÌƒRï¿½ï¿½ï¿½tï¿½Bï¿½Oï¿½ï¿½ï¿½[ï¿½Vï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Kï¿½p
     config->Notify (-1);
-    // ƒoƒX‚ğƒŠƒZƒbƒg 
+    // ï¿½oï¿½Xï¿½ï¿½ï¿½ï¿½ï¿½Zï¿½bï¿½g 
     stack.Reset ();
-    // CPUƒŠƒZƒbƒg‚Í•K‚¸ƒoƒX‚æ‚èŒãid—vj
+    // CPUï¿½ï¿½ï¿½Zï¿½bï¿½gï¿½Í•Kï¿½ï¿½ï¿½oï¿½Xï¿½ï¿½ï¿½ï¿½iï¿½dï¿½vï¿½j
     cpu.Reset ();
 
     double speed;
@@ -440,7 +440,7 @@ void NSFPlayer::SetPlayFreq (double r)
         config->GetValue("IRQ_ENABLE").GetInt()!=0,
         &nsf2_irq );
 
-    // ƒ}ƒXƒNXV
+    // ï¿½}ï¿½Xï¿½Nï¿½Xï¿½V
     apu->SetMask( (*config)["MASK"].GetInt()    );
     dmc->SetMask( (*config)["MASK"].GetInt()>>2 );
     fds->SetMask( (*config)["MASK"].GetInt()>>5 );
@@ -709,8 +709,7 @@ void NSFPlayer::SetPlayFreq (double r)
       else // if not 2 channels, presume mono
       {
           outm = (out[0] + out[1]) >> 1;
-          for (int i=0; i < nch; ++i)
-              b[0] = outm;
+          b[0] = outm;
       }
       b += nch;
 

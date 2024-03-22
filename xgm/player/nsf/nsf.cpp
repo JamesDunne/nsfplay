@@ -61,11 +61,13 @@ void sjis_legacy(char* s, const unsigned int length)
 	}
 	if (utf8) return; // valid UTF8, don't convert
 
+#ifdef _WIN32
 	// if not valid UTF8 assume legacy shift-JIS
 	// (convenient conversion back and forth using windows wide character)
 	wchar_t w[1024];
 	MultiByteToWideChar(932,0,s,-1,w,1024);
 	WideCharToMultiByte(CP_UTF8,0,w,-1,s,length,NULL,NULL);
+#endif
 }
 
 
