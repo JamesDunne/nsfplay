@@ -195,9 +195,13 @@ int main(int argc, char **argv) {
     auto songCount = nsf.GetSongNum();
     printf("%d songs\n", songCount);
 
-    pc.SetValue("PLAY_TIME", (60 * 3 + 30) * 1000);
-    pc.SetValue("AUTO_DETECT", 1);
-    pc.SetValue("QUALITY", 40);
+    pc["PLAY_TIME"] = (60 * 3 + 30) * 1000;
+    pc["AUTO_DETECT"] = 1;
+    pc["QUALITY"] = 40;
+    pc["MASTER_VOLUME"] = 224;
+    pc["APU2_OPTION5"] = 0; // disable randomized noise phase at reset
+    pc["APU2_OPTION7"] = 0; // disable randomized tri phase at reset
+
     p.SetConfig(&pc);
 
     if (!p.Load(&nsf)) {
@@ -234,7 +238,7 @@ int main(int argc, char **argv) {
         }
 
         nsf.SetDefaults(pc["PLAY_TIME"], pc["FADE_TIME"], pc["LOOP_NUM"]);
-        nsf.SetLength(-1);
+        nsf.ClearLength();
         p.SetPlayFreq(48000);
         p.SetSong(i);
         p.Reset();

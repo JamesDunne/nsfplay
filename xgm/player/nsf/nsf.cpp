@@ -405,6 +405,12 @@ void sjis_legacy(char* s, const unsigned int length)
     playtime_unknown = false;
   }
 
+  void NSF::ClearLength ()
+  {
+    time_in_ms = -1;
+    playtime_unknown = true;
+  }
+
   int NSF::GetPlayTime ()
   {
     int s = song;
