@@ -202,6 +202,9 @@ int main(int argc, char **argv) {
     pc["APU2_OPTION5"] = 0; // disable randomized noise phase at reset
     pc["APU2_OPTION7"] = 0; // disable randomized tri phase at reset
 
+    // disable DMC pop at start:
+    pc.GetDeviceOption(xgm::DMC,xgm::NES_DMC::OPT_ENABLE_4011) = 0;
+
     p.SetConfig(&pc);
 
     if (!p.Load(&nsf)) {
