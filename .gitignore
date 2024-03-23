@@ -39,3 +39,6 @@ Backup*/
 UpgradeLog*.XML
 UpgradeLog*.htm
 .vs/
+
+nsfconv/*.nsf
+nsfconv/*.wav

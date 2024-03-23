@@ -4,7 +4,6 @@ project(nsfconv)
 set(CMAKE_CXX_STANDARD 17)
 
 add_executable(nsfconv
-
     vcm/group.cpp
     vcm/value.cpp
     xgm/fileutil.cpp
@@ -37,7 +36,7 @@ add_executable(nsfconv
     xgm/player/nsf/nsfplay.cpp
     xgm/player/nsf/pls/ppls.cpp
     xgm/player/nsf/pls/sstream.cpp
-        nsfconv/main.cpp
+    nsfconv/main.cpp
 )
 include_directories(nsfconv
     vcm/
