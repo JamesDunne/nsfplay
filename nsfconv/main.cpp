@@ -30,8 +30,8 @@ typedef struct {
     FILE *f;
     WavHeader h;
     int16_t numChannels;
-    int32_t numFramesInHeader; ///< number of samples per channel declared in wav header (only populated when reading)
-    uint32_t totalFramesReadWritten; ///< total numSamples per channel which have been read or written
+    uint32_t dataBytesWritten;
+    uint32_t extraRiffBytesWritten;
     WavSampleFormat sampFmt;
 } Wav;
 
@@ -59,8 +59,8 @@ int wav_open_write(
     }
 
     w->numChannels = numChannels;
-    w->numFramesInHeader = -1; // not used for writer
-    w->totalFramesReadWritten = 0;
+    w->dataBytesWritten = 0;
+    w->extraRiffBytesWritten = 0;
     w->sampFmt = sampFmt;
 
     // prepare WAV header
@@ -113,7 +113,7 @@ int wav_open_write(
     return 0;
 }
 
-int wav_write_f(Wav *w, void *f, int len) {
+void wav_write_f(Wav *w, void *f, int len) {
     assert(w != nullptr);
     assert(f != nullptr);
     assert(len >= 0);
@@ -127,9 +127,8 @@ int wav_write_f(Wav *w, void *f, int len) {
             }
 
             size_t samples_written = fwrite(z, sizeof(int16_t), w->numChannels * len, w->f);
-            size_t frames_written = samples_written / w->numChannels;
-            w->totalFramesReadWritten += frames_written;
-            return (int) frames_written;
+            w->dataBytesWritten += samples_written * sizeof(int16_t);
+            return;
         }
         case W_FLOAT32: {
             float *z = (float *) alloca(w->numChannels * len * sizeof(float));
@@ -139,20 +138,31 @@ int wav_write_f(Wav *w, void *f, int len) {
             }
 
             size_t samples_written = fwrite(z, sizeof(float), w->numChannels * len, w->f);
-            size_t frames_written = samples_written / w->numChannels;
-            w->totalFramesReadWritten += frames_written;
-            return (int) frames_written;
+            w->dataBytesWritten += samples_written * sizeof(float);
+            return;
         }
-        default: return 0;
+        default: return;
     }
+}
+
+void wav_write_subchunk(Wav *w, const char id[4], uint32_t size, void *data) {
+    assert(w);
+    assert(w->f);
+
+    // TODO: 32-bit overflow and splitting RIFF chunks
+    w->extraRiffBytesWritten += 4 + 4 + size;
+    fwrite(id, 1, 4, w->f);
+    fwrite(&size, 1, 4, w->f);
+    fwrite(data, 1, size, w->f);
 }
 
 void wav_close_write(Wav *w) {
     assert(w);
     assert(w->f);
 
-    uint32_t data_len = w->totalFramesReadWritten * w->numChannels * w->sampFmt;
-    uint32_t chunkSize_len = 36 + data_len; // 36 is size of header minus 8 (RIFF + this field)
+    uint32_t data_len = w->dataBytesWritten;
+    // 36 is size of header minus 8 (RIFF + this field)
+    uint32_t chunkSize_len = 36 + data_len + w->extraRiffBytesWritten;
 
     // update header struct as well
     w->h.ChunkSize = chunkSize_len;
@@ -167,6 +177,39 @@ void wav_close_write(Wav *w) {
 
     fclose(w->f);
     w->f = nullptr;
+}
+
+void id3_synchsafe_u32(uint8_t *id3, uint32_t &p, uint32_t v) {
+    id3[p+3] = (v & 0x7F);
+    v = v >> 7;
+    id3[p+2] = (v & 0x7F);
+    v = v >> 7;
+    id3[p+1] = (v & 0x7F);
+    v = v >> 7;
+    id3[p+0] = (v & 0x7F);
+
+    p += 4;
+}
+
+void id3_frame(uint8_t *id3, uint32_t &id3Size, const char id[4], const char *text) {
+    auto len = strlen(text);
+
+    id3[id3Size++] = id[0];
+    id3[id3Size++] = id[1];
+    id3[id3Size++] = id[2];
+    id3[id3Size++] = id[3];
+    // length = strlen(text) + 1 byte NUL terminator + 1 byte text encoding
+    id3_synchsafe_u32(id3, id3Size, len+2);
+    // flags:
+    id3[id3Size++] = 0;
+    id3[id3Size++] = 0;
+    // text encoding:
+    id3[id3Size++] = 0; // ISO-8859-1, terminated with $00
+    // text:
+    for (size_t i = 0; i < len+1; i++) {
+        id3[id3Size++] = text[i];
+    }
+    //printf("%4s: %s\n", id, text);
 }
 
 int main(int argc, char **argv) {
@@ -213,8 +256,6 @@ int main(int argc, char **argv) {
 
     p.SetChannels(1);
 
-    const float multiplier = 1.0f / (float) INT16_MAX;
-
     for (int i = 0; i < songCount; i++) {
         std::string wavPath;
         {
@@ -246,14 +287,56 @@ int main(int argc, char **argv) {
         p.SetSong(i);
         p.Reset();
 
+        // ID3v2:
+        uint8_t id3[512];
+        uint32_t id3Size = 0;
+        uint32_t id3LengthPtr = 0;
+        {
+            // ID3v2 identifier:
+            id3[id3Size++] = 'I';
+            id3[id3Size++] = 'D';
+            id3[id3Size++] = '3';
+            // version
+            id3[id3Size++] = 4;
+            id3[id3Size++] = 0;
+            // flags:
+            id3[id3Size++] = 0;
+            // length:
+            id3LengthPtr = id3Size;
+            id3[id3Size++] = 0;
+            id3[id3Size++] = 0;
+            id3[id3Size++] = 0;
+            id3[id3Size++] = 0;
+        }
+
+        // artist:
+        id3_frame(id3, id3Size, "TPE1", nsf.GetTitleString("%t"));
+        // album:
+        id3_frame(id3, id3Size, "TALB", "Tracks and Effects");
+        // composer:
+        id3_frame(id3, id3Size, "TCOM", nsf.GetTitleString("%a"));
+        // title:
+        id3_frame(id3, id3Size, "TIT2", nsf.GetTitleString("Track %n"));
+        // track number / total tracks:
+        id3_frame(id3, id3Size, "TRCK", nsf.GetTitleString("%n/%e"));
+        // copyright:
+        id3_frame(id3, id3Size, "TCOP", nsf.GetTitleString("%c"));
+
+        // encode ID3 length:
+        id3_synchsafe_u32(id3, id3LengthPtr, id3Size - 10);
+
+        // render WAV data:
         short samples[480];
         memset(samples, 0, 480 * sizeof(short));
-
         while (!p.IsStopped()) {
             auto len = p.Render(samples, 480);
             wav_write_f(&wav, samples, len);
         }
 
+        // write id3 RIFF chunk:
+        wav_write_subchunk(&wav, "id3 ", id3Size, id3);
+
+        // close out file and write back lengths:
         wav_close_write(&wav);
     }
 

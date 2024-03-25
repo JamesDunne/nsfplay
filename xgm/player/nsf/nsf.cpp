@@ -176,11 +176,6 @@ void sjis_legacy(char* s, const unsigned int length)
     if(song<0) song = this->song;
     UINT8 nsfe_ei = nsfe_plst ? nsfe_plst[song] : song;
 
-    if (!title_unknown)
-    {
-      return print_title;
-    }
-    
     if(format==NULL||strlen(format)>128)
       format = "%L (%n/%e) %T - %A";
 
@@ -281,7 +276,6 @@ void sjis_legacy(char* s, const unsigned int length)
       } while (true);
     }
 
-    title_unknown = false;
     return print_title;
   }
 
@@ -361,13 +355,11 @@ void sjis_legacy(char* s, const unsigned int length)
       SetTitleString (pls->title);
       song = pls->song;
       playlist_mode = true;
-      title_unknown = false;
       enable_multi_tracks = false;
     }
     else
     {
       playlist_mode = false;
-      title_unknown = true;
       enable_multi_tracks = true;
     }
 
@@ -474,7 +466,6 @@ void sjis_legacy(char* s, const unsigned int length)
   void NSF::SetSong (int s)
   {
     song = s % songs;
-    title_unknown = true;
   }
 
   bool NSF::Load (UINT8 * image, UINT32 size)

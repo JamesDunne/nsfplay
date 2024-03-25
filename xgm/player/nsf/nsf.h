@@ -83,7 +83,6 @@ namespace xgm
     int loop_num, default_loopnum;
     /** ���t���Ԃ��s���̎�true�i�f�t�H���g�̉��t���Ԃ��g�p�j*/
     bool playtime_unknown;
-    bool title_unknown;
 
       NSF ();
      ~NSF ();
